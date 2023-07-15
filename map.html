@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+
+<head>
+    <meta charset="utf-8">
+    <title></title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@100..800&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css"
+        integrity="sha256-kLaT2GOSpHechhsozzB+flnD+zUyjE2LlfWPgU04xyI=" crossorigin="" />
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: "Lexend", "Helvetica Neue", "Helvetica", sans-serif;
+            margin: 0;
+            padding: 0;
+            font-size: 14px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background-color: #000;
+            height: 100vh;
+        }
+
+        header {
+            background-color: #999;
+            color: #eee;
+            height: 0vh;
+        }
+
+        main {
+            background-color: #222;
+            color: #ddd;
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: center;
+        }
+
+        footer {
+            background-color: #666;
+            color: #eee;
+            height: 0vh;
+        }
+
+        li {
+            display: flex;
+            flex-direction: row;
+            white-space: nowrap;
+        }
+
+        .map,
+        #map {
+            display: inline-block;
+            height: 100vh;
+            width: 75vw;
+        }
+
+        nav {
+            width: 25vw;
+            height: 100vh;
+            overflow-y: scroll;
+            border-right: 2px outset #ccc;
+            padding: 0;
+            background-color: #eee;
+            color: #222;
+            padding-top: 8rem;
+        }
+
+        path.leaflet-interactive:focus {
+            outline: 0px;
+        }
+
+        details {
+            cursor: pointer;
+        }
+
+        details p {
+            padding-left: 2rem;
+            padding-right: 1rem;
+        }
+
+        ::marker {
+            color: #0007;
+        }
+
+        details img {
+            height: 75px;
+            width: 75px;
+            margin: 1rem 1rem 0px 2rem;
+        }
+
+        .leaflet-popup img {
+            height: 150px;
+            width: 150px;
+        }
+
+        details a {
+            color: cyan;
+        }
+
+        details a:visited {
+            color: darkcyan;
+        }
+
+        details {
+            clear: both;
+        }
+
+        .leaflet-popup-pane img {
+            padding: 0.5rem 1rem 0.25rem 0;
+        }
+
+        h1 {
+            text-transform: uppercase;
+            text-align: center;
+            margin-left: -1rem;
+            background-color: #000;
+            margin-top: 0px;
+            padding-top: 1rem;
+            padding-bottom: 1rem;
+            color: #eee;
+            margin-bottom: 0px;
+        }
+
+        .leaflet-popup h1 {
+            margin-left: 0.25rem;
+        }
+        .tabs {
+            display: block;
+            background: #eee;
+            display: flex;
+            flex-direction: row;
+            justify-content: space-evenly;
+            align-items: center;
+        }
+        .tabs a {
+            text-decoration: none;
+            color: #000;
+            display: inline-block;
+            background-color: #ccc;
+            width: 100%;
+            text-align: center;
+            height: 1.5rem;
+            border-right: 2px outset #0009;
+            padding-top: 0.25rem;
+            border-bottom: 1px solid #0009;
+        }
+        .tabs a.selected {
+            background-color: #eee;
+            height:2rem;
+            position: relative;
+            top: -5px;
+            border-bottom: 0px;
+            font-size: 1.2em;
+
+        }
+        #navhead {
+            top: 0px;
+            position: fixed;
+            width: 25vw;
+            height: 8rem;
+        }
+        #navlists {
+
+            margin-left: 1rem;
+        }
+        .navpane {
+            display: none;
+        }
+        .viewing {
+            display: block;
+        }
+    </style>
+    <script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js" integrity="sha256-WBkoXOwTeyKclOHuWtc+i2uENFpDZ9YPdf5Hf+D7ewM="
+        crossorigin=""></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dom-to-image/2.6.0/dom-to-image.js"></script>
+</head>
+
+<body>
+    <main>
+        <nav>
+            <div id="navhead">
+                <h1>History of San Francisco Street Names</h1>
+                <div class="tabs">  
+                    <a href="#streets" id='streetsTab' onclick="return app.showtab('streets')" class="selected">Streets</a> 
+                    <a href="#hoods" id='hoodsTab' onclick="return app.showtab('hoods')">Neighborhoods</a> 
+                    <a href="#people" id='peopleTab' onclick="return app.showtab('people')">People</a>
+                </div>
+            </div>
+            <div id="navlists">
+                <div id="streets" class="navpane viewing"></div>
+                <div id="hoods" class="navpane"></div>
+                <div id="people" class="navpane"></div>
+            </div>
+        </nav>
+
+        <div id="map"></div>
+    </main>
+    <script>
+        (function() {
+            const $ = str => document.querySelector(str);
+            const $$ = str => document.querySelectorAll(str);
+
+            let app = {
+                data: {
+                    themes: {
+                        "20th Century":"#990",
+                        "Alta California":"#80c",
+                        "Anza Expedition":"#0c8",
+                        "Authors":"#c80",
+                        "Business":"#08c",
+                        "Civil War":"#00a",
+                        "Explorers":"#0a0",
+                        "Mayors":"#060",
+                        "Mexican-Am. War":"#600",
+                        "Military": "#0aa",
+                        "Pioneers/Gold Rush": "#a0a",
+                        "Politicians": "#aa0"
+                    }
+                },
+                state: {
+                    loaded: false,
+                    polylines: [],
+                    tooltips: [],
+                    markup: [],
+                    popupOpen: false
+                },
+                init: function() {
+                    fetch("sf-street-history.json").then(r => r.json()).then(data => {
+                        app.data = data;
+                        app.setupMap();
+                        app.setupPeople();
+                        app.setupHoods();
+                    });
+                },
+                showtab: function(tab) {
+                    $("a.selected").classList.remove("selected");
+                    $(`#${tab}Tab`).classList.add("selected");
+                    $(".viewing").classList.remove("viewing");
+                    $(`#${tab}`).classList.add("viewing");
+                },
+                setupHoods: function() {
+                    let hoods = app.data.neighborhoods;
+
+                    let keys = Object.keys(hoods);
+                    let arr = [];
+                    keys.forEach(key=>{
+                        arr.push(hoods[key]);
+                    });
+
+                    arr = arr.sort((a, b) => { return (a.name < b.name) ? - 1 : ((a > b) ? 1 : 0 ) });
+
+                    arr.forEach(item=>{
+                        let hood  = item;
+                        let markup = document.createElement("details");
+                        let desc = (hood.history) ? `<p>${hood.history}</p>` : '';
+                        let img = (hood.image) ? `<img src="img/${hood.image}">` : '';
+                        let hasimg = (hood.image) ? "*" : "";
+                        let link = (hood.link) ? `<p><a href="${hood.link}" target="_blank">More info...</a></p>` : '';
+                        markup.innerHTML = `<summary>${hood.name}${hasimg}<\/summary>${img}${desc}${link}`;
+                        $("#hoods").append(markup);
+                    });
+
+                },
+                setupPeople: function() {
+                    let people = app.data.entities;
+
+                    let keys = Object.keys(people);
+                    let arr = [];
+                    keys.forEach(key=>{
+                        arr.push(people[key]);
+                    });
+
+                    arr = arr.sort((a, b) => { return (a.name < b.name) ? - 1 : ((a > b) ? 1 : 0 ) });
+
+                    arr.forEach(item=>{
+                        let person  = item;
+                        let markup = document.createElement("details");
+                        let desc = (person.desc) ? `<p>${person.desc}</p>` : '';
+                        let img = (person.image) ? `<img src="img/${person.image}">` : '';
+                        let hasimg = (person.image) ? "*" : "";
+                        let link = (person.link) ? `<p><a href="${person.link}" target="_blank">More info...</a></p>` : '';
+                        markup.innerHTML = `<summary>${person.name}${hasimg}<\/summary>${img}${desc}${link}`;
+                        $("#people").append(markup);
+                    });
+                },
+                setupMap: function() {
+                    let map = L.map($(`#map`), {
+                        center: [37.8437122, -122.3491274],
+                        zoom: 10,
+                        zoomControl: true,
+                        fadeAnimation: true,
+                        zoomAnimation: true
+                    });
+                    app.state.map = map;
+                    L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
+                        attribution: ''
+                    }).addTo(map);
+
+                    let keys = Object.keys(app.data.streets);
+                    console.log("street indexes:");
+                    console.dir(keys);
+                    let streets = L.featureGroup();
+                    let bounds = [];
+                    let html = "";
+                    let arr = keys.map(function(k) {
+                        return app.data.streets[k];
+                    });
+                    arr = arr.sort((a, b) => {
+                        return (a.name > b.name) ? 1 : ((b.name > a.name) ?
+                            -1 : 0);
+                    });
+                    arr.forEach(str => {
+                        //let str = app.data.streets[key];
+                        let img = '';
+                        if (app.data.entities[str.entityIds] && app.data
+                            .entities[str.entityIds].image) {
+                            img =
+                                `<img style='float:left;' src='img/${app.data.entities[str.entityIds].image}'>`;
+                        }
+                        let desc = (str.entityIds && app.data.entities[
+                                str.entityIds] && app.data.entities[
+                                str.entityIds].desc) ?
+                            `<p>${app.data.entities[str.entityIds].desc}<\/p>` :
+                            '';
+                        let person = (app.data.entities[str.entityIds] &&
+                                app.data.entities[str.entityIds].name
+                            ) ?
+                            `<h2>${app.data.entities[str.entityIds].name}<\/h2>` :
+                            '';
+                        let poly = L.polyline(str.polyline).bindPopup(
+                            `<h1>${str.name}<\/h1>${person}${img}<p>${str.history}<\/p>${desc}<br clear="both">`
+                        );
+                        let markup = document.createElement('details');
+                        let history = (str.history) ?
+                            `<p>${str.history}<\/p>` : '';
+                        let hasimg = (img) ? "*" : "";
+                        markup.innerHTML =
+                            `<summary>${str.name}${hasimg}<\/summary>${img}${history}${desc}`;
+                        markup.onclick = function(evt) {
+                            poly.setStyle({
+                                color: "#f0f"
+                            });
+                            app.state.map.flyToBounds(poly.getBounds());
+                            poly.openPopup();
+                            console.dir(evt);
+                        };
+                        /* markup.onmouseout = function(evt) {
+                            poly.setStyle({color: "#3388ff"});
+                            // poly.closePopup();
+                            console.dir(evt);
+                        };
+                        */
+                        $("#streets").append(markup);
+                        app.state.markup.push(markup);
+
+                        poly.on('mouseover', function(e) {
+                            if (!app.state.popupOpen) {
+                                e.target.setStyle({
+                                    color: "#f00"
+                                });
+                            }
+                        });
+                        poly.on('mouseout', function(e) {
+                            if (!app.state.popupOpen) {
+                                e.target.setStyle({
+                                    color: "#3388ff"
+                                });
+                            }
+                        });
+                        poly.on('popupopen', function(e) {
+                            app.state.popupOpen = true;
+                            e.target.setStyle({
+                                color: "#f00"
+                            });
+                        });
+                        poly.on('popupclose', function(e) {
+                            app.state.popupOpen = false;
+                            e.target.setStyle({
+                                color: "#3388ff"
+                            });
+                        });
+                        let tooltip = poly.bindTooltip(`${str.name}`)
+                            .addTo(map);
+                        bounds.push(str.polyline);
+                        poly.addTo(streets);
+
+                        app.state.polylines.push(poly);
+                        app.state.tooltips.push(poly);
+                    });
+                    // $("nav").innerHTML = html;
+                    streets.addTo(map);
+                    map.fitBounds(bounds);
+                },
+                fetch: function(url, callback) {
+                    fetch(url).then(response => response.json()).then(data => {
+                        app.data = data;
+                        app.state.loaded = true;
+                        if (callback && typeof(callback) ===
+                            "function") {
+                            callback(data);
+                        }
+                    });
+                },
+                display: function(data, tgt) {
+                    let out = "<table><thead><tr>";
+                    const keys = Object.keys(data[0]);
+                    if (keys) {
+                        keys.forEach(key => {
+                            out += `<th>${key}</th>`;
+                        });
+                    }
+                    out += "</tr></thead><tbody>";
+                    data.forEach(item => {
+                        out += `<tr>`;
+                        keys.forEach(key => {
+                            out += `<td>${item[i]}</td>`;
+                        });
+                        out += `</tr>`;
+                    });
+                    out += "</tbody></table>";
+
+                    if (tgt) {
+                        tgt.innerHTML = out;
+                    }
+                    return out;
+                }
+            }
+            window.app = app;
+            app.init();
+        })();
+    </script>
+</body>
+
+</html>
