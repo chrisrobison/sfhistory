@@ -257,17 +257,33 @@
                     polylines: [],
                     tooltips: [],
                     markup: [],
-                    popupOpen: false
+                    popupOpen: false,
+                    layers: []
+                },
+                setupMap: function() {
+                    let map = L.map($(`#map`), {
+                        center: [37.8437122, -122.3491274],
+                        zoom: 10,
+                        zoomControl: true,
+                        fadeAnimation: true,
+                        zoomAnimation: true
+                    });
+                    app.state.map = map;
+                    L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
+                        attribution: ''
+                    }).addTo(map);
+                    return map;
                 },
                 init: function() {
+                    let map = app.setupMap();
                     fetch("sf-street-history.json").then(r => r.json()).then(data => {
                         app.data = data;
-                        app.setupMap();
+                        app.setupStreets(map);
                         //app.setupPeople();
                         app.setupHoods();
                     });
                     
-                    fetch("landmarks.json").then(r => r.json()).then(data => {
+                    fetch("newlandmarks.json").then(r => r.json()).then(data => {
                         app.state.landmarks = data;
                         app.setupLandmarks();
                     });
@@ -288,7 +304,7 @@
                     });
 
                     arr = arr.sort((a, b) => { return (a.name < b.name) ? - 1 : ((a > b) ? 1 : 0 ) });
-
+                    
                     arr.forEach(item=>{
                         let hood  = item;
                         let markup = document.createElement("details");
@@ -301,23 +317,52 @@
                     });
 
                 },
-                setupLandmarks: function() {
+                getWiki: async function(topic) {
+                    topic = topic.replace(/\W/, '_');
+                    let resp = await fetch(`wiki.php?q=${topic}`);
+                    let data  = await resp.json();
+                    return data;
+                },
+                setupLandmarks: async function() {
                     let arr = app.state.landmarks;
 
                     arr = arr.sort((a, b) => { return (a.name < b.name) ? - 1 : ((a > b) ? 1 : 0 ) });
                     let newarr = [], seen = [];
-                    arr.forEach(item=>{
+                    let fgroup = L.featureGroup().addTo(app.state.map);
+                    console.log("setting up landmarks");
+                    for (const item of arr) {
+                        console.dir(item);
                         let landmark = item;
                         let markup = document.createElement("details");
                         let addr = (landmark.address) ? `<p>${landmark.address}</p>` : '';
-                        let year = (landmark.date) ? `<p>Year: ${landmark.year}</p>` : '';
+                        console.log("date: " + landmark.date);
+                        let year = (landmark.date) ? `<p>Date: ${landmark.date}</p>` : '';
                         let img = (landmark.image) ? `<img src="${landmark.image}">` : '';
-
-                        let hasimg = (landmark.image) ? "*" : "";
                         let link = (landmark.link) ? `<p><a href="${landmark.link}" target="_blank">More info...</a></p>` : '';
-                        markup.innerHTML = `<summary>${landmark.name}${hasimg}<\/summary>${img}<div class='detail'>${addr}${year}${link}</div>`;
+                        if (landmark.coord && typeof(landmark.coord)=="string") {
+                            let latlon = landmark.coord.split(/\;/);
+                            console.log(`latlon: ${latlon}`);
+                            landmark.coord = [latlon[1], latlon[0]];
+                        }
+                        if (landmark.coord) {
+                            let pin = L.marker([landmark.coord[1],landmark.coord[0]]);
+                            let markpop = pin.bindPopup(`<h1>${landmark.name}<\/h1>${addr}${img}<p>${link}<\/p><br clear="both">`);
+                            fgroup.addLayer(pin);
+                        }
+                        let history = document.createElement("div");
+                        history.className = "history";
+                        let wiki = "";
+                        
+                        /* 
+                            let data = await app.getWiki(landmark.name.replace(/\W/g, '_'));
+                        let parts = data.content.content.split("/\n\n/");
+                        wiki = parts[1].replace(/\[\[([^\]]+)\]\]/g, function(m,n) { console.log(m+n); return n.replace(/.*\|/, ''); }).replace(/<ref.* /g, '') .replace(/\'\'\'/g,"'"); 
+                        */
+                        let hasimg = (landmark.image) ? "*" : "";
+                        markup.innerHTML = `<summary>${landmark.name}${hasimg}<\/summary>${img}<p>${wiki}</p><div class='detail'>${addr}${year}${link}</div>`;
                         $("#landmarks").append(markup);
-                    });
+                    }
+                    app.state.layers['landmarks'] = fgroup;
                 },
                 setupPeople: function() {
                     let people = app.data.entities;
@@ -341,19 +386,7 @@
                         $("#people").append(markup);
                     });
                 },
-                setupMap: function() {
-                    let map = L.map($(`#map`), {
-                        center: [37.8437122, -122.3491274],
-                        zoom: 10,
-                        zoomControl: true,
-                        fadeAnimation: true,
-                        zoomAnimation: true
-                    });
-                    app.state.map = map;
-                    L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
-                        attribution: ''
-                    }).addTo(map);
-
+                setupStreets: function(map) {
                     let keys = Object.keys(app.data.streets);
                     console.log("street indexes:");
                     console.dir(keys);
@@ -385,9 +418,7 @@
                             ) ?
                             `<h2>${app.data.entities[str.entityIds].name}<\/h2>` :
                             '';
-                        let poly = L.polyline(str.polyline).bindPopup(
-                            `<h1>${str.name}<\/h1>${person}${img}<p>${str.history}<\/p>${desc}<br clear="both">`
-                        );
+                        let poly = L.polyline(str.polyline).bindPopup(`<h1>${str.name}<\/h1>${person}${img}<p>${str.history}<\/p>${desc}<br clear="both">`);
                         let markup = document.createElement('details');
                         let history = (str.history) ?
                             `<p>${str.history}<\/p>` : '';
@@ -401,6 +432,12 @@
                             app.state.map.flyToBounds(poly.getBounds());
                             poly.openPopup();
                             console.dir(evt);
+                        };
+                        markup.onmouseover = function(evt) {
+                            poly.setStyle({color: "#ff0000"});
+                        };
+                        markup.onmouseout = function(evt) {
+                            poly.setStyle({color: "#3388ff"});
                         };
                         /* markup.onmouseout = function(evt) {
                             poly.setStyle({color: "#3388ff"});
