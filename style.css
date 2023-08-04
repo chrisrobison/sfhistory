@@ -1,0 +1,193 @@
+* {
+    box-sizing: border-box;
+    padding: 0;
+    margin: 0;
+}
+
+body {
+    font-family: "Lexend", "Helvetica Neue", "Helvetica", sans-serif;
+    margin: 0;
+    padding: 0;
+    font-size: 14px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background-color: #000;
+    height: 100vh;
+}
+
+header {
+    background-color: #999;
+    color: #eee;
+    height: 0vh;
+}
+
+main {
+    background-color: #222;
+    color: #ddd;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+}
+
+footer {
+    background-color: #666;
+    color: #eee;
+    height: 0vh;
+}
+
+li {
+    display: flex;
+    flex-direction: row;
+    white-space: nowrap;
+}
+
+.map,
+#map {
+    display: inline-block;
+    height: 100vh;
+    width: 75vw;
+}
+
+nav {
+    width: 25vw;
+    height: 100vh;
+    overflow-y: scroll;
+    border-right: 2px outset #ccc;
+    padding: 0;
+    background-color: #eee;
+    color: #222;
+    padding-top: 8rem;
+}
+
+path.leaflet-interactive:focus {
+    outline: 0px;
+}
+
+details {
+    cursor: pointer;
+}
+
+details p {
+    padding-left: 2rem;
+    padding-right: 1rem;
+}
+
+::marker {
+    color: #0007;
+}
+
+details img {
+    height: 75px;
+    width: 75px;
+    margin: 1rem 1rem 0px 2rem;
+}
+
+.leaflet-popup img {
+    height: 150px;
+    width: 150px;
+}
+
+details a {
+    color: cyan;
+}
+
+details a:visited {
+    color: darkcyan;
+}
+
+details {
+    clear: both;
+}
+
+.leaflet-popup-pane img {
+    padding: 0.5rem 1rem 0.25rem 0;
+}
+
+h1 {
+    text-transform: uppercase;
+    text-align: center;
+    margin-left: -1rem;
+    background-color: #000;
+    margin-top: 0px;
+    padding-top: 1rem;
+    padding-bottom: 1rem;
+    color: #eee;
+    margin-bottom: 0px;
+}
+details a {
+    color: #00c;
+}
+.leaflet-popup h1 {
+    margin-left: 0.25rem;
+}
+.tabs {
+    display: block;
+    background: #eee;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-evenly;
+    align-items: center;
+}
+.tabs a {
+    text-decoration: none;
+    color: #000;
+    display: inline-block;
+    background-color: #ccc;
+    width: 100%;
+    text-align: center;
+    height: 1.5rem;
+    border-right: 2px outset #0009;
+    padding-top: 0.25rem;
+    border-bottom: 1px solid #0009;
+}
+.tabs a.selected {
+    background-color: #eee;
+    height:2rem;
+    position: relative;
+    top: -5px;
+    border-bottom: 0px;
+    font-size: 1.2em;
+
+}
+#navhead {
+    top: 0px;
+    position: fixed;
+    width: 25vw;
+    height: 8rem;
+}
+#navlists {
+
+    margin-left: 1rem;
+}
+.navpane {
+    display: none;
+}
+.viewing {
+    display: block;
+}
+.detail {
+    display: inline-block;
+}
+@media only screen and (max-width:450px) {
+    main {
+        flex-direction: column-reverse;
+        align-items: center;
+        justify-content: center;
+    }
+    #map,.map {
+        height: 100%;
+        width: 100vw;
+    } 
+    nav {
+        width: 100vw;
+    }
+    #navhead {
+        width: 100vw;
+        top: 46vh;
+    }
+    
+}
+
