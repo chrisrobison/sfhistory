@@ -17,6 +17,19 @@
                 "Military": "#0aa",
                 "Pioneers/Gold Rush": "#a0a",
                 "Politicians": "#aa0"
+            },
+            basemaps: {
+                 "OpenTopoMap": L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', { maxZoom: 17, attribution: 'Map data: &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, <a href="http://viewfinderpanoramas.org">SRTM</a> | Map style: &copy; <a href="https://opentopomap.org">OpenTopoMap</a> (<a href="https://creativecommons.org/licenses/by-sa/3.0/">CC-BY-SA</a>)' }) ,
+                 "Stadia Alidade Smooth": L.tileLayer('https://tiles.stadiamaps.com/tiles/alidade_smooth/{z}/{x}/{y}{r}.png', { maxZoom: 20, attribution: '&copy; <a href="https://stadiamaps.com/">Stadia Maps</a>, &copy; <a href="https://openmaptiles.org/">OpenMapTiles</a> &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors' }) ,
+                 "Stadia Alidade Smooth Dark": L.tileLayer('https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.png', { maxZoom: 20, attribution: '&copy; <a href="https://stadiamaps.com/">Stadia Maps</a>, &copy; <a href="https://openmaptiles.org/">OpenMapTiles</a> &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors' }) ,
+                 "Spinal Map": L.tileLayer('https://{s}.tile.thunderforest.com/spinal-map/{z}/{x}/{y}.png?apikey={apikey}', { attribution: '&copy; <a href="http://www.thunderforest.com/">Thunderforest</a>, &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors', apikey: '9ec2826e615f4f09999da5f2e730dd4a', maxZoom: 22 }) ,
+                 "Thunderforest Pioneer": L.tileLayer('https://{s}.tile.thunderforest.com/pioneer/{z}/{x}/{y}.png?apikey={apikey}', { attribution:'&copy; <a href="http://www.thunderforest.com/">Thunderforest</a>, &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors', apikey: '9ec2826e615f4f09999da5f2e730dd4a', maxZoom: 22 }),
+                 "Stamen Toner": L.tileLayer('https://stamen-tiles-{s}.a.ssl.fastly.net/toner/{z}/{x}/{y}{r}.{ext}', { attribution: 'Map tiles by <a href="http://stamen.com">Stamen Design</a>, <a href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a> &mdash; Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors', subdomains: 'abcd', minZoom: 0, maxZoom: 20, ext: 'png' }) ,
+                 "Stamen Toner Light": L.tileLayer('https://stamen-tiles-{s}.a.ssl.fastly.net/toner-lite/{z}/{x}/{y}{r}.{ext}', { attribution: 'Map tiles by <a href="http://stamen.com">Stamen Design</a>, <a href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a> &mdash; Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors', subdomains: 'abcd', minZoom: 0, maxZoom: 20, ext: 'png' }) ,
+                 "Stamen Watercolor": L.tileLayer('https://stamen-tiles-{s}.a.ssl.fastly.net/watercolor/{z}/{x}/{y}.{ext}', { attribution: 'Map tiles by <a href="http://stamen.com">Stamen Design</a>, <a href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a> &mdash; Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors', subdomains: 'abcd', minZoom: 1, maxZoom: 16, ext: 'jpg' }) ,
+                 "Stamen Terrain": L.tileLayer('https://stamen-tiles-{s}.a.ssl.fastly.net/terrain/{z}/{x}/{y}{r}.{ext}', { attribution: 'Map tiles by <a href="http://stamen.com">Stamen Design</a>, <a href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a> &mdash; Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors', subdomains: 'abcd', minZoom: 0, maxZoom: 18, ext: 'png' }) ,
+                 "Esri World Street Map": L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}', { attribution: 'Tiles &copy; Esri &mdash; Source: Esri, DeLorme, NAVTEQ, USGS, Intermap, iPC, NRCAN, Esri Japan, METI, Esri China (Hong Kong), Esri (Thailand), TomTom, 2012' }) 
+
             }
         },
         state: {
@@ -27,21 +40,35 @@
             popupOpen: false,
             layers: [],
             pins: [],
-            markups: []
+            markups: [],
+            baseMaps: {},
+            overlayMaps: {}
         },
         setupMap: function() {
+            app.state.layers.push(L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', { attribution: '' })); // .addTo(map);
+            app.state.layers.push(L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+	attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community'
+}));
+            app.state.baseMaps = { "OpenstreetMap": app.state.layers[0], "ArcGIS": app.state.layers[1] };
+
+            // L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', { attribution: '' })).addTo(map);
             let map = L.map($(`#map`), {
                 center: [37.8437122, -122.3491274],
                 zoom: 10,
                 zoomControl: true,
                 fadeAnimation: true,
-                zoomAnimation: true
+                zoomAnimation: true,
+                layers: [app.state.layers[1]]
             });
             app.state.map = map;
-            L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
-                attribution: ''
-            }).addTo(map);
             map.on("popupopen", app.popupOpen);
+            app.state.layerControl = L.control.layers(app.state.baseMaps, app.state.overlayMaps).addTo(map);
+
+            let maps = Object.keys(app.data.basemaps);
+            maps.forEach(basemap=>{
+                app.state.layerControl.addBaseLayer(app.data.basemaps[basemap], basemap);
+            });
+
             return map;
         },
         popupOpen: function(evt) {
@@ -61,12 +88,50 @@
                 app.state.landmarks = data;
                 app.setupLandmarks();
             });
+            fetch("sf-bars.json").then(r => r.json()).then(data => {
+                app.data.bars = data;
+                app.setupBars();
+            });
         },
         showtab: function(tab) {
             $("a.selected").classList.remove("selected");
             $(`#${tab}Tab`).classList.add("selected");
             $(".viewing").classList.remove("viewing");
             $(`#${tab}`).classList.add("viewing");
+        },
+        setupBars: function() {
+            let bars = app.data.bars;
+
+            let keys = Object.keys(bars);
+            let arr = [];
+            keys.forEach(key=>{
+                arr.push(bars[key]);
+            });
+
+            arr = arr.sort((a, b) => { return (a.name < b.name) ? - 1 : ((a > b) ? 1 : 0 ) });
+            let barMarkers = [];
+            let barPopups = [];
+            arr.forEach(item=>{
+                let bar = item;
+                let markup = document.createElement("details");
+                markup.title = `${bar.name}`;
+                let desc = (bar.desc) ? `<p>${bar.desc}</p>` : '';
+                let img = (bar.image) ? `<img src="img/${bar.image}">` : '';
+                let hasimg = (bar.image) ? "*" : "";
+                let link = (bar.link) ? `<p><a href="${bar.link}" target="_blank">More info...</a></p>` : '';
+                let addr = (bar.address) ? `<p>${bar.address}</p>` : '';
+                markup.innerHTML = `<summary>${bar.name}${hasimg}<\/summary>${img}${desc}${addr}${link}`;
+
+                $("#bars").append(markup);
+                let marker = L.marker([bar.lat, bar.lng], { title: bar.name });
+                let popup = marker.bindPopup(`<summary>${bar.name}${hasimg}<\/summary>${img}${desc}${addr}${link}`);
+                barMarkers.push(marker);
+                marker.onclick = function(e) { app.state.barMarkers.forEach((mark, idx) => {
+                    if (mark.options.title == e.target.title) mark.openPopup(); }); };
+
+            });
+            app.state.barMarkers = L.layerGroup(barMarkers);
+            app.state.layerControl.addOverlay(app.state.barMarkers, "Bars");
         },
         setupHoods: function() {
             let hoods = app.data.neighborhoods;
@@ -145,6 +210,7 @@
                 $("#landmarks").append(markup);
             }
             app.state.layers['landmarks'] = fgroup;
+            app.state.layerControl.addOverlay(app.state.layers['landmarks'], "Landmarks");
         },
         setupPeople: function() {
             let people = app.data.entities;
@@ -266,6 +332,9 @@
             });
             // $("nav").innerHTML = html;
             streets.addTo(map);
+            app.state.layers['streets'] = streets;
+            app.state.layerControl.addOverlay(app.state.layers['streets'], "Streets");
+
             map.fitBounds(bounds);
         },
         fetch: function(url, callback) {

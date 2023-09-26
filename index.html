@@ -22,7 +22,8 @@
                 <h1>History of San Francisco Street Names</h1>
                 <div class="tabs">  
                     <a href="#streets" id='streetsTab' onclick="return app.showtab('streets')" class="selected">Streets</a> 
-                    <a href="#hoods" id='hoodsTab' onclick="return app.showtab('hoods')">Neighborhoods</a> 
+                    <a style='display:none' href="#hoods" id='hoodsTab' onclick="return app.showtab('hoods')">Neighborhoods</a> 
+                    <a href="#bars" id='barsTab' onclick="return app.showtab('bars')">Bars</a> 
                     <a href="#people" id='peopleTab' onclick="return app.showtab('people')" style="display:none;">People</a>
                     <a href="#landmarks" id='landmarksTab' onclick="return app.showtab('landmarks')">Landmarks</a>
                 </div>
@@ -30,6 +31,7 @@
             <div id="navlists">
                 <div id="streets" class="navpane viewing"></div>
                 <div id="hoods" class="navpane"></div>
+                <div id="bars" class="navpane"></div>
                 <div id="people" class="navpane"></div>
                 <div id="landmarks" class="navpane"></div>
             </div>
